@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useMemo} from "react";
-import "./App.css";
+import React, { useState, useEffect} from "react";
 import axios from "axios";
+
+const cacheCurrencies = {};
 
 const App = () => {
   const url =
@@ -33,18 +34,16 @@ const App = () => {
 
   const convertCurrency = async (from, to) => {
     if (from !== "" && to !== "") {
-      const response = await axios.get(
-        convertUrl + from + separator + to + format
-      );
-      console.log("call api");
-      setResult(response?.data);
+      if (cacheCurrencies[`${from}-${to}`] == null) {
+        const response = await axios.get(
+          convertUrl + from + separator + to + format
+        );
+        console.log("call api");
+        cacheCurrencies[`${from}-${to}`] = response?.data;
+        setResult(response?.data);
+      }
     }
   };
-
-  const cacheResult = useMemo(
-    () => convertCurrency(fromCurrency, toCurrency),
-    [fromCurrency, toCurrency]
-  );
 
   return (
     <div className="App">
@@ -64,7 +63,7 @@ const App = () => {
           </option>
         ))}
       </select>
-      <button onClick={cacheResult}>Convert</button>
+      <button onClick={() => convertCurrency(fromCurrency, toCurrency)}>Convert</button>
       {result !== null && (
         <div>
           {Object.entries(result).map(([key, value]) => (
